@@ -23,6 +23,18 @@
 " Jason Duell       jduell@alumni.princeton.edu     2002/3/7
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+" return true if a cscope database has already been added
+" useful to counter /etc/vimrc which has code snippets for cscope which 
+" make cscope_maps fail
+function! CScopeDBNotAdded()
+  redir => mess
+  silent execute "cs show"
+  redir END
+  let is_added = (mess == "no cscope connections\n")
+  return is_added
+endfunction
+
+let cscope_db_not_added = CScopeDBNotAdded()
 
 " This tests to see if vim was configured with the '--enable-cscope' option
 " when it was compiled.  If it wasn't, time to recompile vim... 
@@ -37,12 +49,14 @@ if has("cscope")
     " if you want the reverse search order.
     set csto=0
 
-    " add any cscope database in current directory
-    if filereadable("cscope.out")
+    if ( cscope_db_not_added )
+      " add any cscope database in current directory
+      if filereadable("cscope.out")
         cs add cscope.out  
-    " else add the database pointed to by environment variable 
-    elseif $CSCOPE_DB != ""
+        " else add the database pointed to by environment variable 
+      elseif $CSCOPE_DB != ""
         cs add $CSCOPE_DB
+      endif
     endif
 
     " show msg when any other cscope db added
